@@ -1,27 +1,52 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>TV Player</title>
-    <style>
-      body, html {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-      }
-      iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-      }
-    </style>
-  </head>
-  <body>
-    <iframe src="https://iptvplayer.stream/import/yuWHc0qZGx" allowfullscreen></iframe>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Multi Channel Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #channel-list {
+      background: #222;
+      color: white;
+      padding: 10px;
+      border: none;
+      font-size: 16px;
+    }
+    iframe, video {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: black;
+    }
+  </style>
+</head>
+<body>
+  <!-- Kanal tanlash -->
+  <select id="channel-list">
+    <option value="https://iptvplayer.stream/import/W-zh7BoACA">UzReport TV</option>
+    <option value="https://iptvplayer.stream/import/yiITBH7EL3">Sevimli</option>
+    <option value="http://online-video.rbc.ru/online/rbctv_480p/index.m3u8?e=e8&t=IbzcGc&checkedby:iptvcat.com">РБК</option>
+    <!-- boshqa kanallar ham qo'shishingiz mumkin -->
+  </select>
+
+  <!-- Player -->
+  <iframe id="player" src="https://iptvplayer.stream/import/yuWHc0qZGx" allowfullscreen></iframe>
+
+  <script>
+    const select = document.getElementById("channel-list");
+    const player = document.getElementById("player");
+
+    select.addEventListener("change", () => {
+      player.src = select.value;
+    });
+  </script>
+</body>
 </html>
-
-</html>
-
-
 
