@@ -19,11 +19,12 @@
       border: none;
       font-size: 16px;
     }
-    iframe, video {
+    #iframePlayer, #videoPlayer {
       flex: 1;
       width: 100%;
       border: none;
       background: black;
+      display: none;
     }
   </style>
 </head>
@@ -33,20 +34,53 @@
     <option value="https://iptvplayer.stream/import/W-zh7BoACA">UzReport TV</option>
     <option value="https://iptvplayer.stream/import/yiITBH7EL3">Sevimli</option>
     <option value="http://online-video.rbc.ru/online/rbctv_480p/index.m3u8?e=e8&t=IbzcGc&checkedby:iptvcat.com">РБК</option>
-    <!-- boshqa kanallar ham qo'shishingiz mumkin -->
   </select>
 
-  <!-- Player -->
-  <iframe id="player" src="https://iptvplayer.stream/import/yuWHc0qZGx" allowfullscreen></iframe>
+  <!-- iframe player -->
+  <iframe id="iframePlayer" allowfullscreen></iframe>
 
+  <!-- video player -->
+  <video id="videoPlayer" controls autoplay playsinline></video>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
     const select = document.getElementById("channel-list");
-    const player = document.getElementById("player");
+    const iframePlayer = document.getElementById("iframePlayer");
+    const videoPlayer = document.getElementById("videoPlayer");
+    let hls;
 
+    function playChannel(url) {
+      if (url.includes("iptvplayer.stream/import")) {
+        // iframe orqali ochamiz
+        videoPlayer.style.display = "none";
+        iframePlayer.style.display = "block";
+        iframePlayer.src = url;
+      } else if (url.endsWith(".m3u8") || url.includes("m3u8")) {
+        // m3u8 linkni video playerda ochamiz
+        iframePlayer.style.display = "none";
+        videoPlayer.style.display = "block";
+        if (hls) {
+          hls.destroy();
+        }
+        if (Hls.isSupported()) {
+          hls = new Hls();
+          hls.loadSource(url);
+          hls.attachMedia(videoPlayer);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => videoPlayer.play());
+        } else if (videoPlayer.canPlayType("application/vnd.apple.mpegurl")) {
+          videoPlayer.src = url;
+          videoPlayer.addEventListener("loadedmetadata", () => videoPlayer.play());
+        }
+      }
+    }
+
+    // Default kanal
+    playChannel(select.value);
+
+    // Kanal almashtirish
     select.addEventListener("change", () => {
-      player.src = select.value;
+      playChannel(select.value);
     });
   </script>
 </body>
 </html>
-
