@@ -1,86 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Multi Channel Player</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      margin: 0;
-      background: black;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-    #channel-list {
-      background: #222;
-      color: white;
-      padding: 10px;
-      border: none;
-      font-size: 16px;
-    }
-    #iframePlayer, #videoPlayer {
-      flex: 1;
-      width: 100%;
-      border: none;
-      background: black;
-      display: none;
-    }
-  </style>
+    <meta charset="utf-8">
+    <title>HLS Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
-<body>
-  <!-- Kanal tanlash -->
-  <select id="channel-list">
-    <option value="https://iptvplayer.stream/import/W-zh7BoACA">UzReport TV</option>
-    <option value="https://iptvplayer.stream/import/yiITBH7EL3">Sevimli</option>
-    <option value="http://online-video.rbc.ru/online/rbctv_480p/index.m3u8?e=e8&t=IbzcGc&checkedby:iptvcat.com">РБК</option>
-  </select>
+<body style="margin:0; background:#000; display:flex; justify-content:center; align-items:center; height:100vh;">
+    <video id="video" width="100%" height="100%" controls autoplay></video>
+    <script>
+        // URL dan ?src= qismida linkni olish
+        const urlParams = new URLSearchParams(window.location.search);
+        const src = urlParams.get("src");
 
-  <!-- iframe player -->
-  <iframe id="iframePlayer" allowfullscreen></iframe>
+        var video = document.getElementById('video');
 
-  <!-- video player -->
-  <video id="videoPlayer" controls autoplay playsinline></video>
-
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script>
-    const select = document.getElementById("channel-list");
-    const iframePlayer = document.getElementById("iframePlayer");
-    const videoPlayer = document.getElementById("videoPlayer");
-    let hls;
-
-    function playChannel(url) {
-      if (url.includes("iptvplayer.stream/import")) {
-        // iframe orqali ochamiz
-        videoPlayer.style.display = "none";
-        iframePlayer.style.display = "block";
-        iframePlayer.src = url;
-      } else if (url.endsWith(".m3u8") || url.includes("m3u8")) {
-        // m3u8 linkni video playerda ochamiz
-        iframePlayer.style.display = "none";
-        videoPlayer.style.display = "block";
-        if (hls) {
-          hls.destroy();
-        }
         if (Hls.isSupported()) {
-          hls = new Hls();
-          hls.loadSource(url);
-          hls.attachMedia(videoPlayer);
-          hls.on(Hls.Events.MANIFEST_PARSED, () => videoPlayer.play());
-        } else if (videoPlayer.canPlayType("application/vnd.apple.mpegurl")) {
-          videoPlayer.src = url;
-          videoPlayer.addEventListener("loadedmetadata", () => videoPlayer.play());
+            var hls = new Hls();
+            hls.loadSource(src);
+            hls.attachMedia(video);
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = src;
+        } else {
+            alert("Cannot stream HLS, use another video source");
         }
-      }
-    }
-
-    // Default kanal
-    playChannel(select.value);
-
-    // Kanal almashtirish
-    select.addEventListener("change", () => {
-      playChannel(select.value);
-    });
-  </script>
+    </script>
 </body>
 </html>
+
