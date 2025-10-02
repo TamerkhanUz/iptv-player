@@ -1,28 +1,482 @@
-<html>
+<!DOCTYPE html>
+<html lang="uz">
 <head>
-    <meta charset="utf-8">
-    <title>HLS Player</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Telegram Television ▶️</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<style>
+  body {
+    margin: 0;
+    font-family: "Poppins", Arial, sans-serif;
+    background: linear-gradient(180deg, #2c003e, #6a0572, #ab83a1);
+    color: #fff;
+  }
+
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    z-index: 1000;
+    gap: 8px;
+  }
+  .site-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffccff;
+    letter-spacing: 1px;
+  }
+  .channel-row {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* markazga joylash */
+  gap: 10px;               /* yozuv va select orasidagi masofa */
+  padding: 0 15px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.channel-label {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffccff;
+  white-space: nowrap;
+}
+  .channel-label::before {
+    content: "📺 Сatalog TV:🔎";
+    margin-right: 1px;
+  }
+  select#channelSelect optgroup {
+    background: #4b006e;
+    color: #ffccff;
+    font-weight: 700;
+    padding: 5px 8px;
+  }
+  select#channelSelect {
+  font-size: 16px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: linear-gradient(135deg, #67a4e6, #00c6ff);
+  color: rgb(45, 45, 46);
+  cursor: pointer;
+  min-width: 220px;
+  max-width: 360px;  /* juda uzun bo‘lib ketmasligi uchun */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: 0.3s;
+}
+  select#channelSelect:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+
+  /* Player */
+  .player-container {
+    margin-top: 90px;
+    width: 100%;
+    max-width: 100%;
+    background: #000;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  }
+  video {
+    width: 100%;
+    height: 46vh;
+    object-fit: contain;
+    display: block;
+    background: #000;
+  }
+
+  /* Fullscreen tugma */
+  .fullscreen-btn {
+    display: block;
+    margin: 15px auto;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #16a085, #1abc9c);
+    color: rgb(2, 0, 0);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: 0.3s;
+  }
+  .fullscreen-btn:hover {
+    background: linear-gradient(135deg, #00f53d, #16a085);
+    transform: scale(1.05);
+  }
+
+  /* Controls */
+  .controls {
+    margin: 15px auto 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    padding: 0 20px;
+  }
+  .btn {
+    padding: 8px 16px;
+    min-width: 120px;
+    text-align: center;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #6a98c9, #00c6ff);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15px;
+    transition: 0.3s;
+  }
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  }
+  .pause {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+  }
+  .mute {
+    background: linear-gradient(135deg, #7f8c8d, #95a5a6);
+  }
+
+  /* Info footer */
+  .info {
+    padding: 12px 20px;
+    background: rgba(0, 0, 0, 0.4);
+    text-align: center;
+    font-size: 14px;
+    color: #eee;
+    margin-top: 40px;
+    border-top: 2px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px);
+  }
+</style>
 </head>
-<body style="margin:0; background:#000; display:flex; justify-content:center; align-items:center; height:100vh;">
-    <video id="video" width="100%" height="100%" controls autoplay></video>
-    <script>
-        // URL dan ?src= qismida linkni olish
-        const urlParams = new URLSearchParams(window.location.search);
-        const src = urlParams.get("src");
+<body>
 
-        var video = document.getElementById('video');
+<header>
+  <div class="channel-row">
+    <div class="channel-label"></div>
+    <select id="channelSelect">
 
-        if (Hls.isSupported()) {
-            var hls = new Hls();
-            hls.loadSource(src);
-            hls.attachMedia(video);
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = src;
-        } else {
-            alert("Cannot stream HLS, use another video source");
-        }
-    </script>
+      <optgroup label="🥊 𝐒𝐩𝐨𝐫𝐭 𝐨𝐥𝐚𝐦𝐢!">
+        <option value="https://stream2.cinerama.uz/1263/tracks-v1a1/mono.m3u8">𝑺𝒆𝒕𝒂𝒏𝒕𝒂 𝑻𝑽 𝟏ㅤㅤ ⏬⏬ </option>
+        <option value="http://94.43.1.138:8081/setanta2/index.m3u8">𝑺𝒆𝒕𝒂𝒏𝒕𝒂 𝑻𝑽 2 </option>
+        <option value="https://rmtv.akamaized.net/hls/live/2043153/rmtv-es-web/bitrate_3.m3u8">REAL MADRID TV </option>
+        <option value="http://31.148.48.15/Futbol_HD/index.m3u8">Футбол HD</option>
+        <option value="https://stream1.cinerama.uz/1004/tracks-v1a1/mono.m3u8">Sport UZ HD</option>
+        <option value="https://stream8.cinerama.uz/1010/tracks-v1a1/playlist.m3u8">Footbol UZ HD</option>
+        <option value="https://a62dad94.wurl.com/master/f36d25e7e52f1ba8d7e56eb859c636563214f541/UmFrdXRlblRWLWV1X0ZJRkFQbHVzRW5nbGlzaF9ITFM/playlist.m3u8">FIFA +</option>  
+        <option value="https://stream1.cinerama.uz/1229/tracks-v1a1/mono.m3u8">Viju SPORT </option>
+        <option value="https://streams2.sofast.tv/vglive-sk-462904/playlist.m3u8">MMA TV </option>
+        <option value="https://linear-893.frequency.stream/dist/xumo/893/hls/master/playlist.m3u8">UFC TV </option>
+        <option value="https://linear-893.frequency.stream/dist/xumo/893/hls/master/playlist.m3u8">UFC Network </option>
+        <option value="https://streaming.televizor-24-tochka.ru/live/6.m3u8">МатчТВ</option>
+        <option value="https://stream8.cinerama.uz/1049/tracks-v1a1/playlist.m3u8">Матч Планета</option>
+        <option value="http://194.143.148.28:8080/MatchArena/index.m3u8">Матч Арена</option>
+        <option value="http://185.189.225.157/EuroSport1/index.m3u8">Eurosport 1 HD </option>
+        <option value="http://185.189.225.157/EuroSport2/index.m3u8">Eurosport 2 HD</option>
+        <option value="http://217.11.177.56:80/streams/media/extreme-sport_720x576/index.m3u8">ExtrimeSports </option>
+        <option value="https://dazn-combat-rakuten.amagi.tv/hls/amagi_hls_data_rakutenAA-dazn-combat-rakuten/CDN/master.m3u8">DAZN-TV </option>
+        <option value="https://amg01074-fueltv-fueltvemeaen-rakuten-b6j62.amagi.tv/hls/amagi_hls_data_rakutenAA-fueltvemeaen/CDN/master.m3u8">Fuel HD </option>
+        <option value="https://bein-esp-xumo.amagi.tv/playlistR1080p.m3u8">BEIN SPORT EXTRA </option>
+        <option value="https://vslive.pw/stream/48527/index.m3u8">Vital-Football </option>
+        <option value="https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master_3360.m3u8">RedBullTV </option>
+        <option value="https://stream8.cinerama.uz/1028/tracks-v1a1/playlist.m3u8">KHL - Xokkey</option>
+        <option value="http://93.125.121.61:8383/play/a028">KHL Prime HD </option>
+      
+      </optgroup>
+
+      <optgroup label="🏆 🅿🆁🅴🅼🅸🆄🅼 𝗧𝗩 ">
+
+      <option value="https://cdn4.skygo.mn/live/disk1/TNT4/HLSv3-FTA/TNT4.m3u8">ТНТ International</option>
+      <option value="https://streaming.televizor-24-tochka.ru/live/23-req_offset_28000000-req_window_0-1k_v5.m3u8">ТНТ</option>
+      <option value="http://89.28.25.122/hls/tnt_md.m3u8">TNT-Exclusive</option>
+      <option value="https://cdn-01.bonus-tv.ru/tntmusic/playlist.m3u8">TNT-MUSIC </option>
+      <option value="http://194.143.148.28:8080/CTC_LOVE/index.m3u8">СТС Love </option>
+      <option value="http://31.148.48.15/STS_Kids_HD/index.m3u8">СТС Kids</option>
+      
+      <option value="https://streaming.televizor-24-tochka.ru/live/20.m3u8">Muz-TV</option>
+      <option value="https://mhd128.iptv2022.com/p/b6i-8rju9t3aRT1rZ675Aw,1758437447/streaming/channelu/324/1/index.m3u8">Ю-ТВ</option>
+      <option value="https://hls-03-video.webcaramba.com/rutv/live_1080/index.m3u8">RU.TV</option>
+      <option value="https://streaming.televizor-24-tochka.ru/live/19.m3u8">Пятница!</option>
+      <option value="https://stream8.cinerama.uz/1057/tracks-v1a1/playlist.m3u8">Viasat Kino</option>
+      <option value="https://stream8.cinerama.uz/1058/tracks-v1a1/playlist.m3u8">Viju+ Kino</option>
+      <option value="https://stream8.cinerama.uz/1059/tracks-v1a1/playlist.m3u8">Viju+ TV1000</option>
+      <option value="http://193.33.88.172/europa-plus-tv/tracks-v1a1/mono.m3u8">Europa Plus TV</option>
+      <option value="http://193.33.88.172/2x2/tracks-v1a1/mono.m3u8">2x2</option>
+      
+      <option value="http://178.212.71.253:8000/play/75/index.m3u8">Суббота!</option>
+      <option value="http://178.212.71.253:8000/play/139/index.m3u8">ЧЁ</option>
+     </optgroup>
+
+
+
+     <optgroup label="🎬 𝐊𝐢𝐧𝐨 𝐨𝐥𝐚𝐦𝐢!">
+      <option value="https://sirius.greenhosting.ru/Kino24Ru/video.m3u8">Kino24</option>
+      <option value="https://streaming.televizor-24-tochka.ru/live/8.m3u8">TV-5</option>
+      <option value="https://streaming.televizor-24-tochka.ru/live/17-req_offset_28000000-req_window_0-1k_v5.m3u8">Домашный </option>
+      <option value="https://streaming.televizor-24-tochka.ru/live/18.m3u8">TV-3</option>
+      <option value="https://stream8.cinerama.uz/1009/tracks-v1a1/playlist.m3u8">KinoTeatr </option>
+      <option value="https://streaming.goodstream.cyou/live/44-req_offset_28000000-req_window_0-1k_v5.m3u8">ДомКино </option>
+      <option value="https://streaming.televizor-24-tochka.ru/live/18-req_offset_28000000-req_window_0-1k_v5.m3u8">Тв3 </option>
+      <option value="https://autopilot.catcast.tv/content/38617/index.m3u8">Кино1 </option>
+      <option value="https://v2.catcast.tv/content/41596/index.m3u8">Индийское Кино </option>
+      <option value="https://mhd128.iptv2022.com/p/QFHzwl4cNgwvGXEAcnnVpw,1758437446/streaming/dorama/324/1/tracks-v5a1/mono.m3u">Дорама </option>
+      <option value="https://stream8.cinerama.uz/1051/tracks-v1a1/playlist.m3u8">Кинопремьера </option>
+      <option value="https://live-vgtrksmotrim.cdnvideo.ru/vgtrksmotrim/smotrim-live-01.smil/tracks-v5a1/mono.m3u8">СмотримТВ </option>
+      <option value="https://132544.edgevideo.ru/streams/132544_847220/1325441080/index.m3u8">HororTV </option>
+      <option value="https://stream8.cinerama.uz/1052/tracks-v1a1/playlist.m3u8">Родное кино</option>
+      <option value="http://178.212.71.253:8000/play/40/index.m3u8">Cinema TV</option>
+      <option value="http://193.27.209.122/bollywood/index.m3u8">Bollywood</option>
+      <option value="http://178.212.71.253:8000/play/64/index.m3u8">Киносерия HD</option>
+      <option value="http://178.212.71.253:8000/play/126/index.m3u8">Мужское кино </option>
+      <option value="http://178.212.71.253:8000/play/127/index.m3u8">Киносемья</option>
+      <option value="http://178.212.71.253:8000/play/122/index.m3u8">Киносвидание</option>
+      <option value="http://178.212.71.253:8000/play/70/index.m3u8">Киномикс</option>
+      <option value="http://178.212.71.253:8000/play/123/index.m3u8">Кинохит</option>
+      <option value="http://178.212.71.253:8000/play/128/index.m3u8">Наше новое кино</option>
+      <option value="http://178.212.71.253:8000/play/85/index.m3u8">Кинокомедия</option>
+      <option value="http://vod.tuva.ru/kinotv/index.m3u8">КиноТВ</option>
+      <option value="http://178.212.71.253:8000/play/133/index.m3u8">КиноУжас</option>
+    </optgroup>
+
+
+
+    <optgroup label="📰 𝐘𝐚𝐧𝐠𝐢𝐥𝐢𝐤𝐥𝐚𝐫 𝐨𝐥𝐚𝐦𝐢!">
+      <option value="https://stream8.cinerama.uz/1021/tracks-v1a1/playlist.m3u8">Россия 24</option>
+      <option value="https://online-video.rbc.ru/spb/rbctv_spb.m3u8">РБК </option>
+      <option value="https://stream8.cinerama.uz/1015/tracks-v1a1/playlist.m3u8">UzReport </option>
+      <option value="https://tamerkhan.uz/player.html?url=https://streaming.goodstream.cyou/live/210.m3u8">Первый Канал </option>
+      <option value="https://qazaqstantv-stream.qazcdn.com/international/international/playlist.m3u8">Казахстан ТВ </option>
+      <option value="https://tamerkhan.uz/player.html?url=https://streaming.goodstream.cyou/live/213.m3u8">НТВ </option>
+      <option value="https://stream8.cinerama.uz/1001/tracks-v1a1/playlist.m3u8">Ozbekiston24 </option>
+      <option value="https://tv.balkanweb.com/news24/livestream/playlist.m3u8">News24 </option>
+      <option value="https://turnerlive.warnermediacdn.com/hls/live/586495/cnngo/cnn_slate/VIDEO_0_3564000.m3u8">CNN USA </option>
+      <option value="https://content.uplynk.com/channel/4bb4901b934c4e029fd4c1abfc766c37.m3u8">ScrippsNewsHD USA </option>
+      <option value="https://cdn-ue1-prod.tsv2.amagi.tv/linear/amg00731-gannettcoinc-usatodaynews-plex/playlist.m3u8">USA TODAY HD </option>
+      <option value="https://livetv-fa.tubi.video/nbc-news-now/master.m3u8">NBC-NEWS </option>
+      <option value="https://stream.livenewsplay.com:9443/hls/foxnews/foxsd.m3u8">FoxNews </option>
+      <option value="https://live.france24.com/hls/live/2037222-b/F24_AR_HI_HLS/master_5000.m3u8">France24 </option>
+      <option value="https://russian-livews.cgtn.com/hls/LSvexABhNipibK5KRuUkvHZ7220802LSTeze9o8tdFXMHsb1VosgoT220802cd/playlist.m3u8">CGTN Rus </option>
+      <option value="https://tvc-hls.cdnvideo.ru/tvc-res/smil:vd9221_2.smil/playlist.m3u8">ТВЦ </option>
+      <option value="https://live-vgtrksmotrim.cdnvideo.ru/vgtrksmotrim/smotrim-live-03-srt.smil/playlist.m3u8">360-Новостные </option>
+      <option value="https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1758402131/ei/88HOaJOzOpKE0u8Py7-n-AY/ip/188.113.216.100/id/lwYzwdBiaho.3/source/yt_live_broadcast/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/hfr/1/playlist_duration/30/manifest_duration/30/maudio/1/bui/ATw7iSV5iloVa1y00pP5r0k4r7WJo9n9uWc0eOQgHaQmvRIVg8GROdiJHlHZ3m92rIzv208O53aclNF0/spc/hcYD5RTn-WkmQefL_KImAzBA7Ekziqr0ttXJV35-ohZwbzQ0Uz9JGrtTKHnZX5I9ioymJ2tFkBI/vprv/1/go/1/rqh/5/pacing/0/nvgoi/1/ncsapi/1/keepalive/yes/fexp/51355912%2C51552689%2C51565116%2C51565682%2C51580968%2C51593649/dover/11/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cplaylist_duration%2Cmanifest_duration%2Cmaudio%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Citag%2Cplaylist_type/sig/AJfQdSswRgIhAPjnADIzBlDDpI3dxsvOfJXoSi4QfXWCDMtv26JQvFWUAiEA7z_HUKdK_8sxsBZue6dOP3M0mlDamYnjYw_2oybZaWw%3D/file/index.m3u8">EuroNewsRU </option>
+      <option value="https://rt-glb.rttv.com/live/rtnews/playlist_4500Kb.m3u8">RT-NEWS </option>
+      <option value="https://vgtrkregion-reg.cdnvideo.ru/vgtrk/0/russia1-hd/index.m3u8">Россия 1 </option>
+      <option value="http://hls.mirtv.cdnvideo.ru/mirtv-parampublish/mir24_2500/playlist.m3u8">Мир 24</option>
+      <option value="http://serv30.vintera.tv:8081/sochi/sochi24_tv/playlist.m3u8">Cочи24</option>
+    </optgroup>
+
+
+
+    <optgroup label="🎷 𝐌𝐮𝐬𝐢𝐪𝐚!">
+      
+      <option value="https://hls-03-video.webcaramba.com/rutv/live_1080/index.m3u8">RU TV </option>
+      <option value="https://songtv.hls.iptvdc.com/web-russia/index.m3u8">SongTV-RU </option>
+      <option value="https://stream8.cinerama.uz/1008/tracks-v1a1/playlist.m3u8">Navo </option>
+      <option value="https://hls-tvsoyuz.cdnvideo.ru/tvsoyuz2/muzsoyuz.6fw0-58xp-acts-esy0/playlist.m3u8">МузСоюз </option>
+      <option value="https://streaming.televizor-24-tochka.ru/live/20.m3u8">МузТВ </option>
+      <option value="https://kino-1.catcast.tv/content/37745/index.m3u8">Музыка1 </option>
+      <option value="https://hls-shansontv.cdnvideo.ru/shansontv/shansontv-sd.smil/playlist.m3u8">ШансонТВ </option>
+      <option value="https://hls.live.31kz.adapto.kz/muzzone/index.m3u8">MuzzoneTV-KZ </option>
+      <option value="https://stream8.cinerama.uz/1063/tracks-v1a1/playlist.m3u8">MuzUz </option>
+	  <option value="https://stream8.cinerama.uz/1212/tracks-v1a1/playlist.m3u8">Biz Music </option>
+
+    </optgroup>
+
+    <optgroup label="🐥 𝐘𝐨𝐬𝐡𝐥𝐚𝐫!">
+      <option value="https://stream8.cinerama.uz/1034/tracks-v1a1/playlist.m3u8">Карусел </option>
+      <option value="https://stream8.cinerama.uz/1007/playlist.m3u8">Bolajon </option>
+      <option value="https://sirius.greenhosting.ru/MultimaniaRu/tracks-v1a1/mono.m3u8">Мультимания </option>
+      <option value="https://v2.catcast.tv/content/38720/index.m3u8">Детский кино </option>
+      <option value="https://tv.mediacdn.ru/live/solntse/playlist_3000k.m3u8">Солнце </option>
+      <option value="https://132544.edgevideo.ru/streams/132544_931352/132544720/index.m3u8">СказкиТВ</option>
+      <option value="https://stream8.cinerama.uz/1032/tracks-v1a1/playlist.m3u8">Детский мир </option>
+      <option value="https://stream8.cinerama.uz/1033/tracks-v1a1/playlist.m3u8">Уник-ум </option>
+
+    </optgroup>
+
+    <optgroup label="👀 𝐐𝐢𝐳𝐢𝐪𝐚𝐫𝐥𝐢 𝐛𝐢𝐥𝐢𝐦!">
+     
+      <option value="https://api.alpaca.t62a.com/hls/9110/index.m3u8">Кулинар </option>
+      <option value="https://stream8.cinerama.uz/1206/tracks-v1a1/playlist.m3u8">DasturxonTV </option>
+      <option value="https://stream8.cinerama.uz/1031/tracks-v1a1/playlist.m3u8">Точка открыва </option>
+      <option value="https://stream8.cinerama.uz/1036/tracks-v1a1/playlist.m3u8">Автоплюс+ </option>
+      <option value="https://stream8.cinerama.uz/1037/tracks-v1a1/playlist.m3u8">Т24 </option>
+      <option value="https://stream8.cinerama.uz/1039/tracks-v1a1/playlist.m3u8">Discovery HD </option>
+      <option value="https://stream8.cinerama.uz/1040/tracks-v1a1/playlist.m3u8">Discovery Science </option>
+      <option value="https://stream8.cinerama.uz/1041/tracks-v1a1/playlist.m3u8">National Geographic </option>
+      <option value="https://stream8.cinerama.uz/1042/tracks-v1a1/playlist.m3u8">Nat Geo Wild </option>
+      <option value="https://stream8.cinerama.uz/1046/tracks-v1a1/playlist.m3u8">Viasat History</option>
+      <option value="https://stream8.cinerama.uz/1036/tracks-v1a1/playlist.m3u8">Автоплюс+ </option>
+      <option value="https://stream8.cinerama.uz/1053/tracks-v1a1/playlist.m3u8">FashionTV </option>
+      <option value="http://45.11.139.43:8555/telekafe/index.m3u8">Телекафе</option>
+      <option value="http://tvoetv.space:8080/tvoetv_humor/index.m3u8">ТвоёТв</option>
+	  <option value="https://stream8.cinerama.uz/1045/tracks-v1a1/playlist.m3u8">Viju EXPLORE </option>
+
+     
+
+
+
+    </optgroup>
+
+    <optgroup label="🐶 𝐓𝐚𝐛𝐢𝐚𝐭!">
+       <option value="https://cdn-01.bonus-tv.ru/kmir/tracks-v1a1/mono.m3u8">Конный мир </option>
+       <option value="https://stream8.cinerama.uz/1038/tracks-v1a1/playlist.m3u8">Охота и рыбалка </option>
+       <option value="https://stream8.cinerama.uz/1043/tracks-v1a1/playlist.m3u8">Animal Planet HD </option>
+
+
+
+       
+    </optgroup>
+
+    <optgroup label="🇺🇿 UZ Television!">
+		<option value="https://stream8.cinerama.uz/1211/tracks-v1a1/playlist.m3u8">Biz TV </option>
+       <option value="https://stream1.cinerama.uz/1210/tracks-v1a1/mono.m3u8">LUX.TV </option>
+       <option value="https://stream1.cinerama.uz/1220/tracks-v1a1/mono.m3u8">Nurafshon TV </option>
+       <option value="https://stream8.cinerama.uz/1003/tracks-v1a1/playlist.m3u8">Toshkent </option>
+       <option value="https://stream8.cinerama.uz/1002/tracks-v1a1/playlist.m3u8">YoshlarTV </option>
+       <option value="https://stream8.cinerama.uz/1016/tracks-v1a1/mono.m3u8">Zo'rTV </option>
+       <option value="https://stream2.cinerama.uz/1017/tracks-v2a1/mono.m3u8">Sevimli </option>
+       <option value="https://stream8.cinerama.uz/1206/tracks-v1a1/playlist.m3u8">DasturxonTV </option>
+       <option value="https://stream8.cinerama.uz/1007/playlist.m3u8">BolajonTV </option>
+       <option value="https://stream8.cinerama.uz/1009/tracks-v1a1/playlist.m3u8">KinoTeatr </option>
+       <option value="https://stream8.cinerama.uz/1001/tracks-v1a1/playlist.m3u8">Uzbekistan24 </option>
+       <option value="https://stream8.cinerama.uz/1015/tracks-v1a1/playlist.m3u8">UzReport </option>
+       <option value="https://stream8.cinerama.uz/1006/tracks-v1a1/playlist.m3u8">DunyoBoylab </option>
+       <option value="https://stream8.cinerama.uz/1014/tracks-v1a1/playlist.m3u8">MilliyTV </option>
+       <option value="https://stream8.cinerama.uz/1217/tracks-v1a1/playlist.m3u8">My5 </option>
+       <option value="https://stream8.cinerama.uz/1008/tracks-v1a1/playlist.m3u8">Navo </option>
+       <option value="https://stream8.cinerama.uz/1001/tracks-v1a1/playlist.m3u8">Uzbekistan </option>
+       <option value="https://stream8.cinerama.uz/1221/tracks-v1a1/playlist.m3u8">RenessansTV </option>
+       <option value="https://stream8.cinerama.uz/1467/playlist.m3u8">Qaraqalpaqstan </option>
+       <option value="https://stream8.cinerama.uz/1013/tracks-v1a1/playlist.m3u8">Mahalla </option>
+       <option value="https://stream1.cinerama.uz/1004/tracks-v1a1/mono.m3u8">Sport UZ HD</option>
+       <option value="https://stream8.cinerama.uz/1005/tracks-v1a1/playlist.m3u8">Madaniyat va Marifat </option>
+       
+    </optgroup>
+
+
+
+
+    <optgroup label="🇰🇿 KZ Televison!">
+      <option value="https://stream.kaztrk.kz/regional/semeytv/index.m3u8">SemeyTV </option>
+      <option value="https://stream.kaztrk.kz/regional/kostanaytv/index.m3u8">Казахстан Костанай </option>
+      <option value="https://stream.kaztrk.kz/regional/kyzylordatv/index.m3u8">Казахстан Кызылорда </option>
+      <option value="https://hls.live.31kz.adapto.kz/muzzone/index.m3u8">MuzzoneTV-KZ </option>
+      <option value="https://abaitv-stream.qazcdn.com/abaitv/abaitv/playlist.m3u8">AbaiTV </option>
+      <option value="https://stream.kaztrk.kz/regional/petropavltv/index.m3u8">КызылжарТВ </option>
+      <option value="https://stream.kaztrk.kz/regional/aktobetv/index.m3u8">Актобе </option>
+      <option value="https://qazaqstantv-stream.qazcdn.com/international/international/playlist.m3u8">QazaqstanTV </option>
+      <option value="http://sc.id-tv.kz/Astana.m3u8">AstanaTv </option>
+      <option value="http://sc.id-tv.kz/Khabar.m3u8">XabarTV </option>
+      <option value="http://sc.id-tv.kz/Khabar_24.m3u8">Xabar24TV </option>
+      <option value="http://sc.id-tv.kz/Atameken.m3u8">AtamekenBusiness </option>
+      <option value="http://sc.id-tv.kz/ElArna_34_35.m3u8">ElArna</option>
+      <option value="http://sc.id-tv.kz/KTK_34_35.m3u8">KazTRK</option>
+      <option value="http://sc.id-tv.kz/HitTV.m3u8">HitTV</option>
+      <option value="http://sc.id-tv.kz/7_kanal_34_35.m3u8">SedmoyTV</option>
+      <option value="http://sc.id-tv.kz/31Kanal_34_35.m3u8">31tv </option>
+      <option value="http://stream.kaztrk.kz/regional/oskementv/index.m3u8">Кз Усть-Каменогорск</option>
+      <option value="http://stream.kaztrk.kz/regional/karagandytv/index.m3u8">Кз Караганда</option>
+      <option value="http://stream.kaztrk.kz/regional/kokshetautv/index.m3u8">Казахстан Кокшетау </option>
+      <option value="http://stream.kaztrk.kz/regional/pavlodartv/index.m3u8">Казахстан Павлодар</option>
+      <option value="http://stream.kaztrk.kz/regional/petropavltv/index.m3u8">Кз Петропавловск</option>
+    </optgroup>
+
+    </select>
+  </div>
+</header>
+
+<!-- Faqat bitta player -->
+<div class="player-container">
+  <video id="video" controls></video>
+</div>
+
+<!-- To‘liq ekran qilish tugmasi -->
+<button class="fullscreen-btn">⛶ To‘liq ekran qilish</button>
+
+<!-- Qolgan tugmalar -->
+<div class="controls">
+  <button class="btn play">▶ Play</button>
+  <button class="btn pause">⏸ Pause</button>
+  <button class="btn mute">🔇 Mute</button>
+</div>
+
+<div class="info">
+  ©2025 ChiroqTV (Powered by "@PoweredSystems"). v1.0.0.
+</div>
+
+<script>
+  const video = document.getElementById('video');
+  const playBtn = document.querySelector('.play');
+  const pauseBtn = document.querySelector('.pause');
+  const muteBtn = document.querySelector('.mute');
+  const channelSelect = document.getElementById('channelSelect');
+  const fullscreenBtn = document.querySelector('.fullscreen-btn'); // faqat bitta marta!
+
+  let hls;
+
+  function getProxyUrl(url) {
+    if (url.startsWith("http://")) {
+      return "https://tamerkhan.uz/proxy.php?url=" + encodeURIComponent(url);
+    }
+    return url;
+  }
+
+  function loadChannel(url) {
+    if (hls) { hls.destroy(); }
+    const finalUrl = getProxyUrl(url);
+    if (Hls.isSupported()) {
+      hls = new Hls();
+      hls.loadSource(finalUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = finalUrl;
+      video.addEventListener('loadedmetadata', () => video.play());
+    }
+  }
+
+  loadChannel(channelSelect.value);
+  channelSelect.addEventListener('change', () => loadChannel(channelSelect.value));
+
+  playBtn.addEventListener('click', () => video.play());
+  pauseBtn.addEventListener('click', () => video.pause());
+  muteBtn.addEventListener('click', () => video.muted = !video.muted);
+
+  // qurilma mobilmi yoki yo‘qligini tekshiruvchi funksiya
+  function isMobile() {
+    return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
+  }
+
+  // faqat mobil qurilmalarda ko‘rsatish
+  if (!isMobile()) {
+    fullscreenBtn.style.display = "none";
+  }
+
+  // Fullscreen tugma → player3.html ga o‘tadi
+  fullscreenBtn.addEventListener("click", () => {
+    const currentChannel = channelSelect.value;
+    window.location.href = "player3.html?channel=" + encodeURIComponent(currentChannel);
+  });
+</script>
+
+
+
 </body>
 </html>
-
