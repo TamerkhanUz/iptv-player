@@ -433,11 +433,11 @@
   let hls;
 
   function getProxyUrl(url) {
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-      return "https://tamergramtv.tamerkhan20.workers.dev/?url=" + encodeURIComponent(url);
-    }
-    return url;
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return 'https://38.242.228.144:3000/proxy?url=' + encodeURIComponent(url);
   }
+  return url;
+}
 
   function loadChannel(url) {
     if (hls) {
@@ -491,6 +491,7 @@
 
 </body>
 </html>
+
 
 
 
