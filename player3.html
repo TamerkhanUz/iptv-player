@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Landscape Player</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    background: #000;
+    overflow: hidden;
+  }
+
+  .video-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: 100vw;
+    width: 100vh;
+    transform: translate(-50%, -50%) rotate(90deg);
+    transform-origin: center center;
+    object-fit: cover;
+    background: #000;
+  }
+
+  /* 🔙 Orqaga tugmasi (ham albomda buriladi) */
+  .back-btn {
+    position: fixed;
+    bottom: 630px;   /* pastda */
+    right: -20px;    /* o‘ngda */
+    z-index: 9999;
+    padding: 8px 14px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    background: rgba(251, 247, 0, 0.85);
+    color: #000;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    transition: 0.2s;
+    transform: rotate(90deg);  /* 🔥 tugma ham albom rejimida */
+    transform-origin: center center;
+  }
+  .back-btn:hover {
+    background: #fff;
+    transform: rotate(90deg) scale(1.05);
+  }
+</style>
+</head>
+<body>
+  <div class="video-wrapper">
+    <video id="video" controls autoplay playsinline></video>
+    <button class="back-btn" onclick="goBack()">⬅️ Orqaga</button>
+  </div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const channel = urlParams.get("channel");
+  const video = document.getElementById("video");
+  let hls;
+
+  function getProxyUrl(url) {
+    if (url.startsWith("http://")) {
+      return "https://tamerkhan.uz/proxy.php?url=" + encodeURIComponent(url);
+    }
+    return url;
+  }
+
+  function loadChannel(url) {
+    if (hls) hls.destroy();
+    const finalUrl = getProxyUrl(url);
+
+    if (Hls.isSupported()) {
+      hls = new Hls();
+      hls.loadSource(finalUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = finalUrl;
+      video.addEventListener("loadedmetadata", () => video.play());
+    }
+  }
+
+  if (channel) {
+    loadChannel(channel);
+  }
+
+  function goBack() {
+    if (document.referrer) {
+      window.history.back();
+    } else {
+      window.location.href = "index.html";
+    }
+  }
+</script>
+</body>
+</html>
