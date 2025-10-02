@@ -421,26 +421,34 @@
   ©2025 ChiroqTV (Powered by "@PoweredSystems"). v1.0.0.
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
 <script>
   const video = document.getElementById('video');
   const playBtn = document.querySelector('.play');
   const pauseBtn = document.querySelector('.pause');
   const muteBtn = document.querySelector('.mute');
   const channelSelect = document.getElementById('channelSelect');
-  const fullscreenBtn = document.querySelector('.fullscreen-btn'); // faqat bitta marta!
+  const fullscreenBtn = document.querySelector('.fullscreen-btn');
 
   let hls;
 
   function getProxyUrl(url) {
     if (url.startsWith("http://")) {
-      return "https://tamerkhan.uz/proxy.php?url=" + encodeURIComponent(url);
+      // Cloudflare Worker proxy URL
+      return "https://tamergramtv.tamerkhan20.workers.dev/?url=" + encodeURIComponent(url);
     }
     return url;
   }
 
   function loadChannel(url) {
-    if (hls) { hls.destroy(); }
+    if (hls) {
+      hls.destroy();
+      hls = null;
+    }
+
     const finalUrl = getProxyUrl(url);
+
     if (Hls.isSupported()) {
       hls = new Hls();
       hls.loadSource(finalUrl);
@@ -449,34 +457,51 @@
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = finalUrl;
       video.addEventListener('loadedmetadata', () => video.play());
+    } else {
+      alert('HLS not supported in this browser');
     }
   }
 
-  loadChannel(channelSelect.value);
-  channelSelect.addEventListener('change', () => loadChannel(channelSelect.value));
+  // Dastlabki kanalni yuklash
+  window.addEventListener('load', () => {
+    loadChannel(channelSelect.value);
+  });
 
-  playBtn.addEventListener('click', () => video.play());
-  pauseBtn.addEventListener('click', () => video.pause());
-  muteBtn.addEventListener('click', () => video.muted = !video.muted);
+  channelSelect.addEventListener('change', () => {
+    loadChannel(channelSelect.value);
+  });
 
-  // qurilma mobilmi yoki yo‘qligini tekshiruvchi funksiya
+  playBtn.addEventListener('click', () => {
+    video.play();
+  });
+
+  pauseBtn.addEventListener('click', () => {
+    video.pause();
+  });
+
+  muteBtn.addEventListener('click', () => {
+    video.muted = !video.muted;
+  });
+
   function isMobile() {
     return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
   }
 
-  // faqat mobil qurilmalarda ko‘rsatish
-  if (!isMobile()) {
-    fullscreenBtn.style.display = "none";
+  if (!isMobile() && fullscreenBtn) {
+    fullscreenBtn.style.display = 'none';
   }
 
-  // Fullscreen tugma → player3.html ga o‘tadi
-  fullscreenBtn.addEventListener("click", () => {
-    const currentChannel = channelSelect.value;
-    window.location.href = "player3.html?channel=" + encodeURIComponent(currentChannel);
-  });
+  if (fullscreenBtn) {
+    fullscreenBtn.addEventListener('click', () => {
+      const currentChannel = channelSelect.value;
+      window.location.href = 'player3.html?channel=' + encodeURIComponent(currentChannel);
+    });
+  }
 </script>
+
 
 
 
 </body>
 </html>
+
