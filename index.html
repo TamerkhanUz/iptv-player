@@ -432,9 +432,8 @@
 
   let hls;
 
-  // Bu funksiya http url larni Cloudflare Worker proxysi orqali o'tkazadi
   function getProxyUrl(url) {
-    if (url.startsWith("http://")) {
+    if (url.startsWith("http://") || url.startsWith("https://")) {
       return "https://tamergramtv.tamerkhan20.workers.dev/?url=" + encodeURIComponent(url);
     }
     return url;
@@ -445,6 +444,7 @@
       hls.destroy();
       hls = null;
     }
+
     const finalUrl = getProxyUrl(url);
 
     if (Hls.isSupported()) {
@@ -488,8 +488,10 @@
   }
 </script>
 
+
 </body>
 </html>
+
 
 
 
