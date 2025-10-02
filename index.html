@@ -422,7 +422,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
 <script>
   const video = document.getElementById('video');
   const playBtn = document.querySelector('.play');
@@ -433,9 +432,9 @@
 
   let hls;
 
+  // Bu funksiya http url larni Cloudflare Worker proxysi orqali o'tkazadi
   function getProxyUrl(url) {
     if (url.startsWith("http://")) {
-      // Cloudflare Worker proxy URL
       return "https://tamergramtv.tamerkhan20.workers.dev/?url=" + encodeURIComponent(url);
     }
     return url;
@@ -446,7 +445,6 @@
       hls.destroy();
       hls = null;
     }
-
     const finalUrl = getProxyUrl(url);
 
     if (Hls.isSupported()) {
@@ -462,7 +460,6 @@
     }
   }
 
-  // Dastlabki kanalni yuklash
   window.addEventListener('load', () => {
     loadChannel(channelSelect.value);
   });
@@ -471,17 +468,9 @@
     loadChannel(channelSelect.value);
   });
 
-  playBtn.addEventListener('click', () => {
-    video.play();
-  });
-
-  pauseBtn.addEventListener('click', () => {
-    video.pause();
-  });
-
-  muteBtn.addEventListener('click', () => {
-    video.muted = !video.muted;
-  });
+  playBtn.addEventListener('click', () => video.play());
+  pauseBtn.addEventListener('click', () => video.pause());
+  muteBtn.addEventListener('click', () => video.muted = !video.muted);
 
   function isMobile() {
     return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
@@ -498,7 +487,9 @@
     });
   }
 </script>
+
 </body>
 </html>
+
 
 
